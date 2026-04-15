@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-seismic-bg text-slate-200 selection:bg-seismic-cyan selection:text-seismic-bg font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .leaflet-container {
+    @apply bg-seismic-bg font-body;
+  }
+
+  .leaflet-bar a {
+    @apply !bg-seismic-surface-1 !text-white !border-white/10 hover:!bg-seismic-surface-2 !rounded-none;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-seismic-surface-1/60 backdrop-blur-xl border border-white/5 shadow-2xl shadow-black/40 rounded-2xl;
+  }
+
+  .elevated-panel {
+    @apply bg-seismic-surface-2/40 border border-white/5 rounded-xl shadow-lg;
+  }
+
+  .seismic-label {
+    @apply font-sans text-[11px] uppercase tracking-wide text-slate-500 font-semibold;
+  }
+
+  .ghost-border {
+    @apply border border-white/5;
+  }
+
+  .btn-primary {
+    @apply bg-seismic-danger font-sans font-bold uppercase tracking-wider px-6 py-4 rounded-lg
+           hover:bg-seismic-danger/90 active:scale-[0.98] transition-all duration-200
+           flex items-center justify-center gap-2 shadow-lg shadow-seismic-danger/20;
+  }
+
+  .input-field {
+    @apply bg-seismic-bg/50 border border-white/10 p-3 font-sans text-base rounded-lg 
+           focus:border-seismic-cyan/50 focus:ring-1 focus:ring-seismic-cyan/20 outline-none transition-all;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-seismic-bg;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-seismic-surface-2 hover:bg-seismic-cyan/50 transition-colors;
+}
+
+/* Radar pulse animation */
+@keyframes radar-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.animate-radar {
+  animation: radar-pulse 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
