@@ -1,16 +1,25 @@
 import React from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Crosshair } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Crosshair, Loader2 } from 'lucide-react';
+import { PredictionResult } from '../App';
+
+interface MapDisplayProps {
+  prediction: PredictionResult | null;
+  loading: boolean;
+}
 
 // Custom Marker Icon using DivIcon to allow Tailwind styling
-const createSeismicIcon = () => {
+const createSeismicIcon = (magnitude: number = 0) => {
+  const intensity = magnitude > 6 ? 'bg-seismic-danger' : 'bg-seismic-cyan';
+  const shadow = magnitude > 6 ? 'shadow-[0_0_20px_rgba(234,60,60,0.6)]' : 'shadow-[0_0_20px_rgba(6,182,212,0.6)]';
+  
   return L.divIcon({
     html: `
       <div class="relative flex items-center justify-center">
         <div class="absolute w-24 h-24 bg-[#ea3c3c33] animate-radar rounded-full"></div>
-        <div class="w-8 h-8 bg-[#ea3c3c] shadow-[0_0_20px_rgba(234,60,60,0.6)] flex items-center justify-center border border-white/20">
+        <div class="w-8 h-8 ${intensity} ${shadow} flex items-center justify-center border border-white/20">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 12h1m8-9v1m8 8h1m-9 8v1m-6.4-15.4l.7.7m12.1-.7l-.7.7m0 11.4l.7.7m-12.1-.7l-.7.7"/></svg>
         </div>
       </div>
@@ -29,8 +38,21 @@ const MapController = ({ center }: { center: [number, number] }) => {
   return null;
 };
 
-export const MapDisplay: React.FC = () => {
-  const [center] = React.useState<[number, number]>([34.0522, -118.2437]);
+export const MapDisplay: React.FC<MapDisplayProps> = ({ prediction, loading }) => {
+  const [center, setCenter] = React.useState<[number, number]>([34.0522, -118.2437]);
+
+  React.useEffect(() => {
+    if (prediction) {
+      // Extract lat/long from prediction location string if needed, 
+      // but easier to just use the raw inputs if available.
+      // Since we don't pass raw inputs back in the same object easily, 
+      // let's parse the location string: "LAT: 34.0522, LON: -118.2437"
+      const parts = prediction.location.split(', ');
+      const lat = parseFloat(parts[0].split(': ')[1]);
+      const lon = parseFloat(parts[1].split(': ')[1]);
+      setCenter([lat, lon]);
+    }
+  }, [prediction]);
 
   return (
     <div className="w-full h-full relative bg-seismic-bg overflow-hidden cursor-crosshair">
@@ -41,7 +63,6 @@ export const MapDisplay: React.FC = () => {
         className="w-full h-full z-10"
         zoomControl={false}
       >
-        {/* Dark Matter Tiles for the Seismic Aesthetic */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -49,17 +70,19 @@ export const MapDisplay: React.FC = () => {
         
         <MapController center={center} />
 
-        <Marker position={center} icon={createSeismicIcon()} />
+        <Marker position={center} icon={createSeismicIcon(prediction?.magnitude || 0)} />
 
         {/* Custom Controls Overlay */}
         <div className="absolute top-8 left-8 z-[1000] flex flex-col gap-2">
           <div className="flex items-center gap-3 bg-seismic-bg/80 backdrop-blur-xl px-5 py-2.5 border border-white/10 rounded-full shadow-2xl">
             <motion.div 
-              animate={{ opacity: [1, 0.4, 1] }}
+              animate={{ opacity: loading ? [1, 0.4, 1] : 1 }}
               transition={{ duration: 1.5, repeat: Infinity }}
-              className="w-2.5 h-2.5 bg-seismic-cyan shadow-[0_0_12px_#06b6d4] rounded-full"
+              className={`w-2.5 h-2.5 rounded-full shadow-[0_0_12px] ${loading ? 'bg-seismic-warning shadow-seismic-warning' : 'bg-seismic-cyan shadow-seismic-cyan'}`}
             />
-            <span className="seismic-label font-bold text-seismic-cyan tracking-wider">LIVE TELEMETRY</span>
+            <span className="seismic-label font-bold text-seismic-cyan tracking-wider">
+              {loading ? 'ANALYZING_CORE...' : 'LIVE_TELEMETRY'}
+            </span>
           </div>
         </div>
 
@@ -69,15 +92,17 @@ export const MapDisplay: React.FC = () => {
           <p className="seismic-label mb-3 text-slate-400">TARGET_COORDINATE</p>
           <div className="space-y-1 relative">
             <h3 className="font-data text-3xl font-bold tracking-tight text-white">
-              34.0522° N
+              {center[0].toFixed(4)}° N
             </h3>
             <h3 className="font-data text-3xl font-bold tracking-tight text-white">
-              118.2437° W
+              {center[1].toFixed(4)}° W
             </h3>
           </div>
           <div className="mt-6 pt-6 border-t border-white/5 flex items-center justify-end gap-3 text-slate-500">
-            <Crosshair size={14} />
-            <span className="font-data text-[10px] tracking-tight">SCAN_ACCURACY: 99.8%</span>
+            {loading ? <Loader2 size={14} className="animate-spin" /> : <Crosshair size={14} />}
+            <span className="font-data text-[10px] tracking-tight">
+              {loading ? 'COMPUTING...' : `SCAN_ACCURACY: ${prediction ? prediction.confidence : '--.-'}%`}
+            </span>
           </div>
         </div>
       </MapContainer>

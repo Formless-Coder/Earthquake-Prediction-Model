@@ -64,7 +64,7 @@ m.drawcoastlines()
 m.fillcontinents(color='coral',lake_color='aqua')
 m.drawmapboundary()
 m.drawcountries()
-plt.show()
+# plt.show()
 
 
 # In[37]:
@@ -147,6 +147,11 @@ print("Test Loss (MSE):", test_loss)
 # Make predictions
 predictions = best_model.predict(X_test)
 print("Sample predictions:", predictions[:5])
+
+# Save the model
+import joblib
+joblib.dump(best_model, 'seismic_model.pkl')
+print("Model saved to seismic_model.pkl")
 
 
 # In[ ]:
