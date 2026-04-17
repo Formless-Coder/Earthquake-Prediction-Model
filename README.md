@@ -84,5 +84,4 @@ Accessible at: `http://localhost:5173/`
 - **Risk Analysis**: Algorithmic classification of regional threats based on predicted magnitude.
 
 ---
-**Developer**: AIML Student & Research Project
 **Domain**: Geophysics & Predictive Analytics
